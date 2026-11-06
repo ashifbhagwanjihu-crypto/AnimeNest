@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b12">
+<title>AnimeNest</title>
+<style>
+:root{--bg:#090b12;--panel:#151925;--muted:#a8afc0;--red:#e50914;--white:#f7f8fb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:Arial, sans-serif}
+header{position:sticky;top:0;z-index:5;background:#090b12ed;backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:15px 5%;border-bottom:1px solid #242938}
+.logo{font-size:25px;font-weight:900;letter-spacing:-1px}.logo span{color:var(--red)}
+button{border:0;border-radius:7px;padding:11px 15px;font-weight:700;cursor:pointer}.primary{background:var(--red);color:white}.secondary{background:#272d3b;color:white}
+.hero{padding:45px 5% 35px;min-height:340px;background:linear-gradient(90deg,#090b12 4%,#090b12d9 48%,#090b1240),linear-gradient(0deg,#090b12,transparent 60%),url('https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1500&q=80') center/cover}
+.eyebrow{color:#ff5961;font-weight:800;letter-spacing:2px;font-size:12px}.hero h1{font-size:clamp(34px,7vw,60px);margin:12px 0}.hero p{max-width:520px;color:#d0d3dc;line-height:1.55}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+main{padding:0 5% 50px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:25px 0 14px}.section-head h2{font-size:20px;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:14px}
+.card{background:var(--panel);border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid #252b3a}.poster{height:190px;background:linear-gradient(135deg,#303b5c,#111522);display:flex;align-items:center;justify-content:center;color:#cbd2e3;font-size:42px}.poster img{width:100%;height:100%;object-fit:cover}.meta{padding:10px}.meta b{display:block;font-size:14px}.meta small{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid #2a3040;border-radius:12px;padding:17px;margin-top:24px}
+input{background:#0d111b;color:white;border:1px solid #343c50;padding:12px;border-radius:7px;width:100%;margin:7px 0}
+label{font-size:13px;color:#c5cada} .hidden{display:none!important}
+.notice{font-size:12px;color:var(--muted);line-height:1.5}
+#player{width:100%;max-height:65vh;background:black;border-radius:10px;margin-top:12px}
+.modal{position:fixed;inset:0;background:#000b;z-index:10;display:flex;align-items:center;justify-content:center;padding:18px}
+.modalbox{width:min(520px,100%);background:#171d2a;border:1px solid #343c50;border-radius:14px;padding:20px}
+footer{padding:25px 5%;color:#777f91;font-size:12px;border-top:1px solid #222938}
+@media(min-width:800px){.poster{height:230px}}
+</style></head>
+<body>
+<header><div class="logo">Anime<span>Nest</span></div><button class="secondary" onclick="showAdmin()">Admin</button></header>
+<section class="hero"><div class="eyebrow">YOUR ANIME UNIVERSE</div><h1>Stories beyond<br>imagination.</h1><p>Discover your next favourite anime. A growing collection, made for anime fans.</p><div class="actions"><button class="primary" onclick="document.getElementById('library').scrollIntoView({behavior:'smooth'})">Explore Anime</button><button class="secondary" onclick="showPremium()">Premium ₹99/month</button></div></section>
+<main>
+<div class="section-head" id="library"><h2>Popular on AnimeNest</h2><span class="notice" id="count">0 titles</span></div>
+<div class="grid" id="catalog"></div>
+<section class="panel hidden" id="adminPanel"><div class="section-head"><h2>Admin upload</h2><button class="secondary" onclick="hideAdmin()">Close</button></div>
+<p class="notice">Demo admin panel: uploads are saved only in this browser on this phone. They are not published to other users.</p>
+<label>Admin passcode</label><input id="adminPass" type="password" placeholder="Enter demo passcode">
+<label>Anime title</label><input id="animeTitle" placeholder="e.g. My Anime Series">
+<label>Poster image (optional)</label><input id="posterFile" type="file" accept="image/*">
+<label>Video file</label><input id="videoFile" type="file" accept="video/*">
+<button class="primary" onclick="addAnime()">Add to this device</button><p class="notice" id="adminMsg"></p></section>
+</main>
+<div class="modal hidden" id="watchModal"><div class="modalbox"><div class="section-head"><h2 id="watchTitle">Anime</h2><button class="secondary" onclick="closeWatch()">✕</button></div><video id="player" controls playsinline></video><p class="notice">Demo playback from a file stored on this device.</p></div></div>
+<div class="modal hidden" id="premiumModal"><div class="modalbox"><div class="section-head"><h2>AnimeNest Premium</h2><button class="secondary" onclick="hidePremium()">✕</button></div><h1 style="font-size:42px;margin:8px 0">₹99 <small style="font-size:15px;color:#a8afc0">/ month</small></h1><p>First 30 days free in the planned membership model.</p><p class="notice">Payment and subscription verification are not connected in this demo. A secure server and payment-provider setup are required before accepting payments.</p><button class="primary" onclick="alert('Premium checkout is not connected yet.')">Continue</button></div></div>
+<footer>AnimeNest • Demo prototype. Upload and playback are local to this device. Only stream anime you have permission to distribute.</footer>
+<script>
+const DB='animenest-demo-v1'; let items=[];
+function load(){try{items=JSON.parse(localStorage.getItem(DB)||'[]')}catch(e){items=[]}render()}
+function save(){localStorage.setItem(DB,JSON.stringify(items))}
+function render(){const el=document.getElementById('catalog');el.innerHTML='';document.getElementById('count').textContent=items.length+' titles';if(!items.length){el.innerHTML='<p class="notice">Your anime library is empty. Tap Admin to add a video on this device.</p>';return}
+items.forEach((a,i)=>{let c=document.createElement('div');c.className='card';let p=document.createElement('div');p.className='poster';if(a.poster){let im=document.createElement('img');im.src=a.poster;p.appendChild(im)}else p.textContent='▶';let m=document.createElement('div');m.className='meta';let b=document.createElement('b');b.textContent=a.title;let s=document.createElement('small');s.textContent='Anime • Added by Admin';m.append(b,s);c.append(p,m);c.onclick=()=>watch(i);el.appendChild(c)})}
+function showAdmin(){document.getElementById('adminPanel').classList.remove('hidden')}
+function hideAdmin(){document.getElementById('adminPanel').classList.add('hidden')}
+function showPremium(){document.getElementById('premiumModal').classList.remove('hidden')}
+function hidePremium(){document.getElementById('premiumModal').classList.add('hidden')}
+function addAnime(){if(document.getElementById('adminPass').value!=='nestadmin'){alert('Demo passcode is incorrect.');return}
+let title=document.getElementById('animeTitle').value.trim(),vf=document.getElementById('videoFile').files[0],pf=document.getElementById('posterFile').files[0];if(!title||!vf){alert('Enter a title and choose a video.');return}
+if(vf.size>80*1024*1024){alert('For this demo, choose a video smaller than 80 MB.');return}
+let r=new FileReader();r.onload=()=>{let posterDone=data=>{items.push({title,video:r.result,poster:data||''});try{save();render();document.getElementById('adminMsg').textContent='Added to this device.'}catch(e){alert('Storage limit reached. Try a smaller video.');items.pop()}};if(pf){let pr=new FileReader();pr.onload=()=>posterDone(pr.result);pr.readAsDataURL(pf)}else posterDone('')};r.readAsDataURL(vf)}
+function watch(i){document.getElementById('watchTitle').textContent=items[i].title;let v=document.getElementById('player');v.src=items[i].video;document.getElementById('watchModal').classList.remove('hidden')}
+function closeWatch(){let v=document.getElementById('player');v.pause();v.removeAttribute('src');v.load();document.getElementById('watchModal').classList.add('hidden')}
+load();
+</script></body></html>
